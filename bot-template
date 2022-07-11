@@ -1,0 +1,2921 @@
+{
+  "hash": "865271730",
+  "bot": {
+    "id": "9745d911-92fa-49bf-9f13-49e6d8527231",
+    "name": "Bot Template (2022-06-22)",
+    "chatBotType": "CUSTOMER_FACING_BOT",
+    "description": "Bot Template (2022-06-22)",
+    "status": "NEW",
+    "getStartedButtonPayload": "hi",
+    "creationTime": 1655681028533,
+    "modificationTime": 1655681201809,
+    "demo": false,
+    "skipNLP": false,
+    "language": "en-US",
+    "botAttributes": {
+      "ENABLE_AGENT_ANNOTATIONS": "false",
+      "ENABLE_DEBUG": "true",
+      "PCS_FALLBACK_LIMIT": "3"
+    },
+    "sessionLength": 0,
+    "passThroughMode": false,
+    "transcriptDisabled": false,
+    "version": "2",
+    "publicBot": false,
+    "transferGroupId": "1699517c-a28a-4f9b-bc82-29ac46574d1d",
+    "channel": "MESSAGING",
+    "readOnly": false
+  },
+  "responder": [
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "723336eb-2d85-4e16-836c-24f31d3dc0d5",
+      "name": "Google_getStoreLocations",
+      "webhook": "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+      "fileUrl": "{{file_url}}",
+      "method": "GET",
+      "params": [
+        {
+          "key": "keyword",
+          "value": "{$botContext.brandName}"
+        },
+        {
+          "key": "rankby",
+          "value": "distance"
+        },
+        {
+          "key": "location",
+          "value": "{$botContext.g_location}"
+        },
+        {
+          "key": "key",
+          "value": "{$botContext.googleAPIKey}"
+        }
+      ],
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "var data = JSON.parse(cb.getVar(\"api_Google_getStoreLocations\").jsonData);\ndata = data.api_Google_getStoreLocations.results;\ncb.log(JSON.stringify(data));\nvar lat = cb.getVar('lat');\nvar lng = cb.getVar('lng');\nvar maxLocationResults = Number(cb.getVar('maxLocationResults'));\nvar api_Google_getStoreLocations = {\n  api_Google_getStoreLocations: { \n    results: [] \n  }\n};\nfor (var d in data) {\n  cb.log(\"Loop [\" + (Number(d) + 1) + \"] of \" + maxLocationResults + \" | name: \" + data[d].name);  \n}\n\n// Universal Tile config\nvar arr = [];\n\nfor (var i in data) {\n  if (Number(i) >= maxLocationResults) break;\n  if (cb.tf(cb.getVar('OPERATIONAL_ONLY')) && data[i].business_status !== 'OPERATIONAL') { continue; }\n  var template = {\n    \"type\": \"vertical\",\n    \"elements\": [\n      {\n        \"type\": \"map\",\n        \"lo\": data[i].geometry.location.lng,\n        \"la\": data[i].geometry.location.lat,\n        \"click\": {\n          \"actions\": [\n            {\n              \"type\": \"link\",\n              \"uri\": encodeURI(\"https://www.google.com/maps/search/?api=1&query=\" + data[i].name + \"&query_place_id=\" + data[i].place_id),\n              \"target\": \"blank\"\n            }\n          ]\n        }\n      },\n      {\n        \"type\": \"text\",\n        \"text\": arrays.place_types[data[i].types[0]] + \" \" + data[i].name,\n        \"tooltip\": data[i].name\n      },\n      {\n        \"type\": \"text\",\n        \"text\": data[i].vicinity + \"(\" + distance(lat, lng, data[i].geometry.location.lat, data[i].geometry.location.lng).toFixed(1) + \" kms)\",\n        \"tooltip\": data[i].vicinity\n      },\n      {\n        \"type\": \"text\",\n        \"text\": cb.tf(data[i].opening_hours.open_now) === true ? \"✅ now open\" : \"❌ currently closed\",\n        \"tooltip\": data[i].name\n      },\n      {\n        \"title\": \"Open in Google Maps\",\n        \"type\": \"button\",\n        \"click\": {\n          \"actions\": [\n            {\n              \"type\": \"link\",\n              \"uri\": encodeURI(\"https://www.google.com/maps/search/?api=1&query=\" + data[i].name + \"&query_place_id=\" + data[i].place_id),\n              \"target\": \"blank\"\n            }\n          ]\n        },\n        \"tooltip\": \"See detailed info about \" + data[i].name + \"in Google Maps\"\n      }\n    ]\n  };\n  arr.push(template);\n}\nvar content = {\n  \"padding\": 10,\n  \"type\": \"carousel\",\n  \"elements\": arr\n};\ncb.log(JSON.stringify(content));\ncb.setVar('locationsTile', arr.length === 1 ? JSON.stringify(arr[0]) : JSON.stringify(content));\ncb.setVar('locationsCount', arr.length);\n",
+      "responseDataVariable": "Google_getStoreLocations",
+      "integrationType": "API",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "7269df80-8764-407b-8b14-30141fc8e2fb",
+      "name": "Google_get_Location",
+      "webhook": "https://maps.googleapis.com/maps/api/place/findplacefromtext/json?",
+      "fileUrl": "{{file_url}}",
+      "method": "POST",
+      "params": [
+        {
+          "key": "input",
+          "value": "{$botContext.slot.location}"
+        },
+        {
+          "key": "inputtype",
+          "value": "textquery"
+        },
+        {
+          "key": "key",
+          "value": "{$botContext.googleAPIKey}"
+        },
+        {
+          "key": "fields",
+          "value": "formatted_address,name,geometry"
+        }
+      ],
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "var data = JSON.parse(cb.getVar(\"api_Google_get_Location\").jsonData);\ndata = data.api_Google_get_Location;\ncb.log(JSON.stringify(data));\ncb.setVar('lat', data.candidates[0].geometry.location.lat);\ncb.setVar('lng', data.candidates[0].geometry.location.lng);\ncb.setVar('g_location', data.candidates[0].geometry.location.lat + \",\" + data.candidates[0].geometry.location.lng);",
+      "responseDataVariable": "Google_get_Location",
+      "integrationType": "API",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "79d8c14a-db9c-42e6-8f53-59fcb0879027",
+      "name": "searchPIC",
+      "webhook": "{{url}}",
+      "fileUrl": "{{file_url}}",
+      "method": "POST",
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "postBody": "{\n  \"searchBy\": \"{$botContext.searchBy}\",\n  \"searchValue\": \"{$botContext.searchValue}\"\n}\n  ",
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "// try {\n  var API_NAME = \"searchPIC\";\n  var r = cb.getVar(\"api_\" + API_NAME);\n  var data = JSON.parse(JSON.parse(r.jsonData)[\"api_\" + API_NAME]);\n  cb.log(JSON.stringify(data));\n/*\nObject.keys(data).forEach(function (item) {\n    cb.setVar(item, data[item]);\n  });\n  */\n  cb.setVar(\"PICFOUND\", true);\nvar elements = [];\ndata.forEach(function(item) {\n  elements.push({\n  \"type\": \"vertical\",\n  \"elements\": [\n    {\n      \"type\": \"text\",\n      \"text\": item.businessName,\n      \"tooltip\": \"Roar!\",\n      \"style\": {\n        \"bold\": true\n      }\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"PIC: \" + item.pic,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": item.firstName + ' ' + item.lastName,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"brand: \" + item.brand,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"status: active ✅ \",\n      \"tooltip\": \"Roar!\"\n    }\n  ]\n});\n});\n\n\nvar tile = JSON.stringify({\n  \"padding\": 10,\n  \"type\": \"carousel\",\n  \"elements\": elements\n});\ncb.log(cb.getVar('PICResult'));\ncb.setVar('tile', tile);\n  // {\\\"pic\\\":\\\"12312311\\\",\\\"firstName\\\":\\\"Jason\\\",\\\"lastName\\\":\\\"McGrath\\\",\\\"producer\\\":\\\"Producer C\\\",\\\"businessName\\\":\\\"1829 Premium Australian Wagyu\\\",\\\"status\\\":\\\"active\\\"}\"\n /* \n} catch (err) {\n  cb.log(\"err (PIC Data): \" + JSON.stringify(err));\n  cb.setVar(\"PICFOUND\", false);\n  cb.jumpTo('PIC_FAIL');\n}\n*/",
+      "responseDataVariable": "searchPIC",
+      "integrationType": "FAAS",
+      "leAccountId": "31487986",
+      "faasLambdaUuid": "a80d4db8-9bb6-43ed-b691-ff3a182f7754",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "96496d3c-494c-41c4-927d-9f983edd1063",
+      "name": "FAQ",
+      "webhook": "{{url}}",
+      "fileUrl": "{{file_url}}",
+      "method": "POST",
+      "params": [
+        {
+          "key": "source",
+          "value": "95ccd5d7eb0c4233aa6347fdb9ce5d07"
+        },
+        {
+          "key": "threshold",
+          "value": "g"
+        },
+        {
+          "key": "multipleResults",
+          "value": "1"
+        },
+        {
+          "key": "phrases",
+          "value": "{$query}"
+        },
+        {
+          "key": "mode",
+          "value": "intents"
+        }
+      ],
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "customDataFields": [
+        {
+          "key": "summary",
+          "value": "{$.api_FAQ.successResult.success[i].summary}"
+        },
+        {
+          "key": "title",
+          "value": "{$.api_FAQ.successResult.success[i].title}"
+        },
+        {
+          "key": "contentURL",
+          "value": "{$.api_FAQ.successResult.success[i].contentURL"
+        },
+        {
+          "key": "imageURL",
+          "value": "{$.api_FAQ.successResult.success[i].imageURL}"
+        }
+      ],
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "var FAQSummary = botContext.getBotVariable(\"api_FAQ\");\nvar FAQArray = JSON.parse(FAQSummary.jsonData);\nbotContext.setBotVariable('FAQResponse', JSON.stringify(FAQArray), true, false);\nbotContext.printDebugMessage(\"API RESULTS RAW: \"+ JSON.stringify(FAQArray));",
+      "responseDataVariable": "FAQ",
+      "integrationType": "KB",
+      "kbMethod": "PHRASE_SEARCH",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "b1061251-952a-4d4c-8407-1b357c47dffa",
+      "name": "getAccountInfo",
+      "webhook": "{{url}}",
+      "fileUrl": "{{file_url}}",
+      "method": "POST",
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "var API_NAME = \"getAccountInfo\";\nvar r = cb.getVar(\"api_\" + API_NAME);\nvar response = JSON.parse(r.jsonData)[\"api_\" + API_NAME];\ncb.log('response: ' + JSON.stringify(response));\n\n/*\nexample response:\n{\n\t\"name\": \"Jerry Smith\",\n\t\"ctype\": \"basic\",\n\t\"sign up date\": \"01-jan-1999\",\n\t\"address\": \"10 Springdale Court, Seattle, Washington, USA, Earth, C-137\",\n\t\"date of birth\": \"10-feb-1968\",\n\t\"cover\": \"Medibank Gold Growing Family\",\n\t\"billingFrequency\": \"weekly\",\n\t\"renewalDate\": \"Thursday 24-April-2022\",\n\t\"limits\": {\n\t\t\"dental\": {\n\t\t\t\"limit\": 250,\n\t\t\t\"used\": \"144.64\"\n\t\t},\n\t\t\"optical\": {\n\t\t\t\"limit\": 300,\n\t\t\t\"used\": \"121.54\"\n\t\t},\n\t\t\"chiro\": {\n\t\t\t\"limit\": 450,\n\t\t\t\"used\": \"300.11\"\n\t\t}\n\t}\n}\n*/\ncb.setVar('cinfo', JSON.stringify(response));\nObject.keys(response).forEach(function (a) {\n  // iterate through object properties and set as botContext.variables to use in Bot Dialog / rules\n  cb.setVar(a, response[a]);\n});\n\n",
+      "responseDataVariable": "getAccountInfo",
+      "integrationType": "FAAS",
+      "leAccountId": "31487986",
+      "faasLambdaUuid": "a5188a83-a470-49e4-b9a8-a6fca786b2bd",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "e98c76fd-fefa-4cea-ae85-4d399db17186",
+      "name": "getPICData",
+      "webhook": "{{url}}",
+      "fileUrl": "{{file_url}}",
+      "method": "POST",
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "postBody": "{\n  \"config\": \"{$botContext.PIC}\",\n  \"isBrand\": \"{$botContext.isBrand}\",\n  \"brand\": \"{$botContext.brand}\"\n}",
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "// try {\n  var API_NAME = \"getPICData\";\n  var r = cb.getVar(\"api_\" + API_NAME);\n  var data = JSON.parse(JSON.parse(r.jsonData)[\"api_\" + API_NAME]);\n  cb.log(typeof data);\nObject.keys(data).forEach(function (item) {\n    cb.setVar(item, data[item]);\n  });\n  cb.setVar(\"PICFOUND\", true);\n  cb.setVar('PICResult', JSON.stringify({\n  \"type\": \"vertical\",\n  \"elements\": [\n    {\n      \"type\": \"text\",\n      \"text\": data.businessName,\n      \"tooltip\": \"Roar!\",\n      \"style\": {\n        \"bold\": true\n      }\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"PIC: \" + data.pic,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": data.firstName + ' ' + data.lastName,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"brand: \" + data.brand,\n      \"tooltip\": \"Roar!\"\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"status: active ✅ \",\n      \"tooltip\": \"Roar!\"\n    }\n  ]\n}));\ncb.log(cb.getVar('PICResult'));\n  // {\\\"pic\\\":\\\"12312311\\\",\\\"firstName\\\":\\\"Jason\\\",\\\"lastName\\\":\\\"McGrath\\\",\\\"producer\\\":\\\"Producer C\\\",\\\"businessName\\\":\\\"1829 Premium Australian Wagyu\\\",\\\"status\\\":\\\"active\\\"}\"\n /* \n} catch (err) {\n  cb.log(\"err (PIC Data): \" + JSON.stringify(err));\n  cb.setVar(\"PICFOUND\", false);\n  cb.jumpTo('PIC_FAIL');\n}\n*/",
+      "responseDataVariable": "getPICData",
+      "integrationType": "FAAS",
+      "leAccountId": "31487986",
+      "faasLambdaUuid": "329173cf-655e-48dc-b0e2-1bd3e884b343",
+      "tangoContextEnabled": false
+    },
+    {
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "f4860df5-7bc4-4449-84ae-e8eae572e2ca",
+      "name": "shift_status",
+      "webhook": "https://{$botContext.asyncMessagingEnt}/api/account/{$botContext.accountId}/shift-status",
+      "fileUrl": "{{file_url}}",
+      "method": "GET",
+      "headers": [
+        {
+          "key": "Authorization",
+          "value": "Bearer {$botContext.BearerToken}"
+        }
+      ],
+      "defaultValues": [
+        {
+          "key": "title"
+        },
+        {
+          "key": "subTitle"
+        },
+        {
+          "key": "image"
+        },
+        {
+          "key": "itemUrl"
+        }
+      ],
+      "results": {
+        "type": "TEXT",
+        "tile": {
+          "tileData": [
+            {
+              "buttons": [],
+              "quickReplyList": []
+            }
+          ]
+        }
+      },
+      "group": "Responders",
+      "transformResultsScript": "// https://developers.liveperson.com/shift-status-api-methods-get-shift-status-by-skill.html\n// https://{$botContext.asyncMessagingEnt}/api/account/{$botContext.accountId}/shift-status\n// service: asyncMessagingEnt\ntry {\n  var api = \"shift_status\";\n  var r = cb.getVar(\"api_\" + api);\n  shiftStatus = JSON.parse(r.jsonData)[\"api_\" + api];\n  // cb.log(\"SHIFT STATUS: \" + JSON.stringify(shiftStatus));\n  cb.log('skillId: ' + cb.getVar('skillId'));\n  var onShift, nextOff, nextOn;\n  var i = 0;\n  for (var i in shiftStatus) {\n    if (Number(cb.getVar('skillId')) === Number(shiftStatus[i].skillId)) {\n      onShift = shiftStatus[i].onShift;\n      nextOff = shiftStatus[i].nextOff;\n      nextOn = shiftStatus[i].nextOn;\n      cb.setVar('onShift', onShift);\n    }\n  }\n  cb.log(JSON.stringify(nextOn)); \n  cb.log('tz: ' + cb.getVar(\"tz\"));\n  var nextOn = cb.convertTime(nextOn, cb.getVar('tz'));\n  cb.setVar('nextOn', nextOn);\n  cb.setVar('nextStart', nextOn.relative);\n  cb.setVar('nextOff', cb.convertTime(nextOff, cb.getVar('tz')));\n  cb.log(JSON.stringify(cb.getVar('nextOn')));\n  // var convOrchNamespace = cb.getVar('convOrchNamespace');\n  // cb.setContextConv(convOrchNamespace, 'nextOn', nextOn);\n  // cb.setContextConv(convOrchNamespace, 'onShift', onShift);\n}\ncatch (err) {\n  cb.log('Shift Status API Error (transform results): ' + JSON.stringify(err));\n}\n",
+      "responseDataVariable": "shift_status",
+      "integrationType": "API",
+      "tangoContextEnabled": false
+    }
+  ],
+  "requiredContext": [],
+  "conversationMessage": [
+    {
+      "id": "02ab38c0e3d7831453bbc438b41a2452054636cb",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": true,
+      "name": "Whatsapp list or buttons",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "UNIVERSAL",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "universalWidget": {
+                  "leMessageJson": "{$botContext.ut}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "// Whatsapp List\ncb.rich.create('ut', 'walist', {\n  title: 'Telstra Instore',\n  subtitle: 'how can we help you today?',\n  buttonLabel: 'See options',\n  sections: [\n    {\n      title: 'Purchase',\n      buttons: [\n        { title: 'buy a new phone', subtitle: 'latest range of smart phones' },\n        { title: 'buy a new tablet', subtitle: 'large range of tablets' },\n        { title: 'accessories', subtitle: 'We got all the extras' }\n      ]\n    },\n    {\n      title: 'Other',\n      buttons: [\n        { title: 'repair phone/tablet', subtitle: 'phone/tablet repairs' }\n      ]\n    }\n  ]\n});\n\n// Whatsapp button card\nvar ut = cb.rich.wabuttons({\n  title: 'how can we help you today?',\n  buttons: [\n    { title: 'new phone/tablet' },\n    { title: 'phone repairs' },\n    { title: 'purchase accessories' }\n  ]\n});",
+      "group": "c834ec71-8122-4cc2-923d-fae05ee0f1c7",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "b8200aacbba67fab9e424668d67d15c9883ac9ac",
+      "prevMessageId": "656a4ff7723d3cccb5d35f131ca4951ef0339cf3",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "UNIVERSAL",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "045b67300c9ad4d25fa160815131c6bb4d430966",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "helpful_no",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Sorry to hear that didn't help, your feedback helps us improve",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "postProcessMessage": "cb.previous();",
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "f289fd3b060e3228e1e1e439738bba1491f4515c",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "none"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "0bc9e591e222580e0980f64d4dbcfd468cd5f109",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "Dynamic Routing",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "ORCHESTRATOR",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "orchestratorWidget": {}
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "botContext.setBotVariable('skipPreviousDialog', 'true', true, false);",
+      "group": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "cc695b9468cb2ac708c463a48eff3cef76425ab7",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "none"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "ORCHESTRATOR"
+    },
+    {
+      "id": "14b46e01722accf655d36d7e2f05dd68c2bde9df",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "question 2",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "question 2",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 8
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.trail('question 2');",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "yes",
+          "payload": "yes"
+        },
+        {
+          "type": "text",
+          "title": "no",
+          "payload": "no"
+        },
+        {
+          "type": "text",
+          "title": "go back",
+          "payload": "go back"
+        }
+      ],
+      "group": "0308bf48-d1b2-4d64-8589-106d7e0bb7fb",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "8382c7dce4706862028692bf3b19aa720a9897a6",
+      "prevMessageId": "a5e5a4f201f5c966881512ccf18197670f73e786",
+      "responseMatches": [
+        {
+          "name": "yes",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "yes",
+                  "yeah",
+                  "yup",
+                  "yep",
+                  "ok",
+                  "sure",
+                  "agree",
+                  "alright",
+                  "okay",
+                  "yes please",
+                  "right on",
+                  "that works",
+                  "sweet",
+                  "sounds good",
+                  "good",
+                  "correct",
+                  "right",
+                  "absolutely"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "16c0153473c927bb91a0f72fa1de7e3ee413cfd0",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_27",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "BLANK_MESSAGE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.welcome();",
+      "group": "df4bd985-2468-47e7-bad0-e8f8fa14481f",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d8f63e2fb832b6194b8953004eda0f92606193fd",
+      "prevMessageId": "6652e1da8fddc1c48d359d71a6647a8ed7da5bf0",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "21669dda16f3f2eeb531a60c6e594ec34ff17614",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "KB_CONTENT",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "{$.api_KB.results[0].summary}",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "98a8cecc91ff912f4d9a7e0e6e97c0ecd5635811",
+      "prevMessageId": "5cc5f39a5bab4cd1ef33dd68cf578a84d33de2b4",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "248aa944c2c43c50897cd7ca5d74b603fda19689",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "KAI",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "DYNAMIC",
+        "results": {
+          "type": "KB_FAQ",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "faqTileWidget": {
+                  "kbId": "95ccd5d7eb0c4233aa6347fdb9ce5d07",
+                  "threshold": "g",
+                  "mode": "intents",
+                  "autoRender": false,
+                  "noOfArticlesToShow": 1,
+                  "feedbackQuestionEnabled": false,
+                  "contentUrlButtonEnabled": false,
+                  "renderCarousel": false,
+                  "responseDataVariable": "KB"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.welcome();\nif (!cb.tf(cb.getVar('KNOWLEDGE_BASE_ENABLED'))) {\n  if (!cb.firstMessage()) {\n    cb.unmatched();\n  }\n}",
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "5cc5f39a5bab4cd1ef33dd68cf578a84d33de2b4",
+      "responseMatches": [
+        {
+          "name": "KB Match Found",
+          "conditions": [
+            {
+              "matchType": "KB_MATCH",
+              "kbResultMatch": {
+                "status": "MATCH_FOUND"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "21669dda16f3f2eeb531a60c6e594ec34ff17614"
+          },
+          "contextDataVariables": [
+            {
+              "name": "kbFound",
+              "value": "true",
+              "scope": "DIALOG"
+            }
+          ]
+        },
+        {
+          "name": "KB Match Not Found",
+          "conditions": [
+            {
+              "matchType": "KB_MATCH",
+              "kbResultMatch": {
+                "status": "MATCH_NOT_FOUND"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": [
+            {
+              "name": "kbFound",
+              "value": "false",
+              "scope": "DIALOG"
+            }
+          ]
+        }
+      ],
+      "interactionType": "KB_FAQ",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "2509c66a811a22caf3bc806c8847ff75c5658787",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_29",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "28433c02-8bee-40c7-9757-b5e284d057b3",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "942638959734d9c0ba20d25ce4543c1ec3fcf58a",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "2eb93cd10e24fbc17c85fa0e9abfdb6679d9c6d2",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_33",
+      "pattern": [
+        "account"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "0308bf48-d1b2-4d64-8589-106d7e0bb7fb",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "a5e5a4f201f5c966881512ccf18197670f73e786",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "35ba4bbfa27e49120ced9491f4c2d779cc03c814",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_21",
+      "pattern": [
+        "_step_up_",
+        "s1",
+        "_STEPUP_"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "8e1aebcb-31be-4a7b-acb0-3e5b0247107d",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "44ef513538bbad610bf5e5fc147205b2891f9532",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "44ef513538bbad610bf5e5fc147205b2891f9532",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "quick_reply_34",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "You done gone stepped up the auth!\nNow I can talk about your account :)",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 8
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.setAuth(true);",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "balance",
+          "payload": "balance"
+        },
+        {
+          "type": "text",
+          "title": "change contact details",
+          "payload": "change contact details"
+        },
+        {
+          "type": "text",
+          "title": "send invoice",
+          "payload": "send invoice"
+        },
+        {
+          "type": "text",
+          "title": "pay a bill",
+          "payload": "pay a bill"
+        }
+      ],
+      "group": "8e1aebcb-31be-4a7b-acb0-3e5b0247107d",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "35ba4bbfa27e49120ced9491f4c2d779cc03c814",
+      "responseMatches": [
+        {
+          "name": "nothing",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "7891g d-9p31 gdp3 gdp9d"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "451df40a7ca2ec2df9d8e62d9df3d60bd67ae15e",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "WAS_ARTICLE_HELPFUL",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Was this helpful?",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 3
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var kbFound = cb.tf(cb.getVar('kbFound'));\ncb.log('kbFound:' +  kbFound);\nvar errorCount = Number(cb.getVar('errorCount'));\nvar errorThreshold = Number(cb.getVar('errorThreshold'));\nvar firstMessage = cb.firstMessage(false);\n\n// DID NOT FOUND KB ARTICLE\nif(!kbFound) {\n  cb.setVar('errorCount', errorCount + 1);  \n  cb.logEvent('article not found', 'kb_results', cb.userSaid()); // report on KB fail with user message\n      if (firstMessage) { // If no article AND this is the first user message, avoid 'unamtched phrase response' and go the the first interaction\n      cb.previous();\n    } else { // send unmatched phrase response and return the the previous interaction\n      cb.unmatched(true, \"offer_escalation\");\n    }\n// FOUND KB ARTICLE\n} else {\n  cb.logEvent('article found', 'kb_results', cb.userSaid()); // report on KB fail with user message\n}\n// END:::::::::::::::::::::::::",
+      "processUserResponse": "if (cb.contains(arrays.yes, cb.userSaid())) {\n  event('yes', 'kb_article_helpful' ,getVar('title'));\n} else if (cb.contains(arrays.no, cb.userSaid())) {\n  event('no', 'kb_article_helpful' ,getVar('title'));\n} else {\n  event('unknown', 'kb_article_helpful' ,getVar('title'));  \n}\n",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "Yes",
+          "payload": "Yes"
+        },
+        {
+          "type": "text",
+          "title": "Nope",
+          "payload": "Nope"
+        }
+      ],
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "f289fd3b060e3228e1e1e439738bba1491f4515c",
+      "prevMessageId": "d020077e61754a5276e22e56c18ea7478824b4f5",
+      "responseMatches": [
+        {
+          "name": "Yes",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "yes",
+                  "yup",
+                  "yep",
+                  "sure",
+                  "that works"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        },
+        {
+          "name": "Nope",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "no*"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "045b67300c9ad4d25fa160815131c6bb4d430966"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      },
+      "interactionDelay": "1000"
+    },
+    {
+      "id": "4d8d8d2ab1d06d0ad20c7584abac58fbbc92a541",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_28",
+      "pattern": [
+        "t1"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "9123fa1a-c582-40b6-86d9-6a33ca581725",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d4d9a8c1a757651245f155b6bbd3c52fb6b54b3f",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "51497753f82232896e2e8cb0d74e04b36b701f5c",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_37",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "BLANK_MESSAGE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.goBack();",
+      "group": "0e97942a-823a-4f79-9ee5-35c09d6c58aa",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "6e3990e37684e240b7a6e85b3861b98d0a3f6013",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "536b90f9d88e56a5a7793b661f34a63174b3be47",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "offer_escalation",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "{$botContext.offerEscalationMessage}",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.setVar(\"errorCount\", 0);\nvar nextShift = cb.getVar('nextOn');\nvar onShift = cb.tf(cb.getVar('onShift'));\nvar offHoursMessage = \"It's currently outside our business hours, but we'll be back online \" + nextShift.relative + '. \\n would you still like to be transferred?';\nvar inHoursMessage = \"would you like to speak with a human?\";\ncb.setVar('offerEscalationMessage', onShift ? inHoursMessage : offHoursMessage);\n\n",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "yes",
+          "payload": "yes"
+        },
+        {
+          "type": "text",
+          "title": "no",
+          "payload": "no"
+        }
+      ],
+      "group": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "cc695b9468cb2ac708c463a48eff3cef76425ab7",
+      "prevMessageId": "baa8fa3595210215673732425219adeec7913fbb",
+      "responseMatches": [
+        {
+          "name": "yes",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "yes",
+                  "yeah",
+                  "yup",
+                  "yep",
+                  "ok",
+                  "sure",
+                  "agree",
+                  "alright",
+                  "okay",
+                  "yes please",
+                  "right on",
+                  "that works",
+                  "sweet",
+                  "sounds good",
+                  "good",
+                  "correct",
+                  "right",
+                  "absolutely"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "0bc9e591e222580e0980f64d4dbcfd468cd5f109"
+          },
+          "contextDataVariables": []
+        },
+        {
+          "name": "no",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "no",
+                  "nah",
+                  "nope",
+                  "no thanks",
+                  "wrong",
+                  "*(incorrect)",
+                  "*(disagree)",
+                  "no way",
+                  "*(not right)",
+                  "*(don't|do not) agree*",
+                  "absolutely not"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      },
+      "interactionDelay": "500"
+    },
+    {
+      "id": "5cc5f39a5bab4cd1ef33dd68cf578a84d33de2b4",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "article_not_found",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "BLANK_MESSAGE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "if (!cb.firstMessage()) {\n  cb.unmatched();\n} else {\n  cb.previous();\n}",
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "21669dda16f3f2eeb531a60c6e594ec34ff17614",
+      "prevMessageId": "248aa944c2c43c50897cd7ca5d74b603fda19689",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "none"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "5db83480cd214804b9c566eac748ef236dfd9640",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": true,
+      "name": "card carousel",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "UNIVERSAL",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "universalWidget": {
+                  "leMessageJson": "{$botContext.ut}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var card = [\n  {\n    \"image\": \"https://upload.wikimedia.org/wikipedia/en/thumb/1/1c/New_Japan_Pro_Wrestling_Logo_2.svg/1200px-New_Japan_Pro_Wrestling_Logo_2.svg.png\"\n  },\n  {\n      \"text\": \"This is the New Japan Lion\",\n      \"tooltip\": \"This is a tooltip\", // if property missing, will use the text as the tooltip,\n      \"style\": { // optional\n        \"color\": \"#FFF\",\n        \"background-color\": \"#3E47A0\",\n        \"size\": \"medium\"\n      }\n    },\n  {\n      \"title\": \"New Japan\",\n      \"uri\": \"https://www.njpw1972.com\", // required\n      \"target\": null, // default value if target property not provided\n      \"tooltip\": null // optional, uses title if no value provided\n    },\n  {\n      \"title\": \"New Japan\", // transforms to postback button\n      \"postback\": \"Button Clicked!\", // optional, postback value will use title if no text provided\n      \"tooltip\": \"Click me!\" // optional\n    }\n]; // sample card\nvar content = []; // carousel content\ncontent.push(cb.rich.verticalCard(card)); // access 'verticalCard' method directly to create translate content\n\n// push a second vertical card into content array. If only 1x card is present, the 'carousel' function will revert to displaying a single card\ncontent.push(cb.rich.verticalCard(card));\n\ncb.rich.create('ut', 'carousel', content);",
+      "group": "c834ec71-8122-4cc2-923d-fae05ee0f1c7",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "b8200aacbba67fab9e424668d67d15c9883ac9ac",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "UNIVERSAL",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "656652666ab519c65330ab6f92edc173ca9dafb5",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "NOT_AUTHENICATED",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT_QUESTION",
+          "tile": {
+            "tileData": [
+              {
+                "text": "{$botContext.authMessage}",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "postProcessMessage": "// cb.previous();",
+      "group": "ee8b3bca-6592-4928-b4e2-0bbc16ff9ea0",
+      "status": "ACTIVE",
+      "required": true,
+      "responseMatches": [
+        {
+          "name": "nothing",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "297rg32 68f  30f 232f3"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT_QUESTION"
+    },
+    {
+      "id": "656a4ff7723d3cccb5d35f131ca4951ef0339cf3",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_43",
+      "pattern": [
+        "ca"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "c834ec71-8122-4cc2-923d-fae05ee0f1c7",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "02ab38c0e3d7831453bbc438b41a2452054636cb",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "5db83480cd214804b9c566eac748ef236dfd9640"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "6652e1da8fddc1c48d359d71a6647a8ed7da5bf0",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "DS | Start",
+      "pattern": [
+        "hi",
+        "hello",
+        "howdy",
+        "hey",
+        "hai",
+        "hola",
+        "hiya",
+        "(hi|hello|hey) *",
+        "good (morning|afternoon|evening)*",
+        "(greetings)*",
+        "aloha",
+        "bonjour",
+        "yo",
+        "(gday|g'day)*",
+        "*(nice|good|pleased) to (meet|see)*"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "df4bd985-2468-47e7-bad0-e8f8fa14481f",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "16c0153473c927bb91a0f72fa1de7e3ee413cfd0",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "6e3990e37684e240b7a6e85b3861b98d0a3f6013",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_36",
+      "pattern": [
+        "go back"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "0e97942a-823a-4f79-9ee5-35c09d6c58aa",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "51497753f82232896e2e8cb0d74e04b36b701f5c",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "744e10b358c4e1572230a8c942a815af9e124be2",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "API_INTEGRATION_01",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "CHECK AUTH STATE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "postProcessMessage": "cb.previous();",
+      "group": "4e919206-001a-458b-9728-cf1e33f6d30b",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "c4ee9ecd988330538ffd0e793f409853b0214f6b",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "76b9dd858c6a2687d29fe3cd5946149788bed08e",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "DS | Escalation",
+      "pattern": [
+        "agent",
+        "human"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "baa8fa3595210215673732425219adeec7913fbb",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "8382c7dce4706862028692bf3b19aa720a9897a6",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "question 3",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "question 3",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 8
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "cb.trail('question 3');",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "yes",
+          "payload": "yes"
+        },
+        {
+          "type": "text",
+          "title": "no",
+          "payload": "no"
+        },
+        {
+          "type": "text",
+          "title": "go back",
+          "payload": "go back"
+        }
+      ],
+      "group": "0308bf48-d1b2-4d64-8589-106d7e0bb7fb",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "14b46e01722accf655d36d7e2f05dd68c2bde9df",
+      "responseMatches": [
+        {
+          "name": "yes",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "yes",
+                  "yeah",
+                  "yup",
+                  "yep",
+                  "ok",
+                  "sure",
+                  "agree",
+                  "alright",
+                  "okay",
+                  "yes please",
+                  "right on",
+                  "that works",
+                  "sweet",
+                  "sounds good",
+                  "good",
+                  "correct",
+                  "right",
+                  "absolutely"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "942638959734d9c0ba20d25ce4543c1ec3fcf58a",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_question_30",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT_QUESTION",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "28433c02-8bee-40c7-9757-b5e284d057b3",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "2509c66a811a22caf3bc806c8847ff75c5658787",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT_QUESTION",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "98a8cecc91ff912f4d9a7e0e6e97c0ecd5635811",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "KB_DETAIL",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "{$.api_KB.results[0].detail}",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d020077e61754a5276e22e56c18ea7478824b4f5",
+      "prevMessageId": "21669dda16f3f2eeb531a60c6e594ec34ff17614",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT",
+      "interactionDelay": "1000"
+    },
+    {
+      "id": "a5e5a4f201f5c966881512ccf18197670f73e786",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "question 1",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "question 1",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 8
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "// cb.trail('question 1');\ncb.firstMessage();",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "yes",
+          "payload": "yes"
+        },
+        {
+          "type": "text",
+          "title": "no",
+          "payload": "no"
+        },
+        {
+          "type": "text",
+          "title": "go back",
+          "payload": "go back"
+        }
+      ],
+      "group": "0308bf48-d1b2-4d64-8589-106d7e0bb7fb",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "14b46e01722accf655d36d7e2f05dd68c2bde9df",
+      "prevMessageId": "2eb93cd10e24fbc17c85fa0e9abfdb6679d9c6d2",
+      "responseMatches": [
+        {
+          "name": "yes",
+          "conditions": [
+            {
+              "matchType": "PATTERN",
+              "patternMatch": {
+                "patterns": [
+                  "yes",
+                  "yeah",
+                  "yup",
+                  "yep",
+                  "ok",
+                  "sure",
+                  "agree",
+                  "alright",
+                  "okay",
+                  "yes please",
+                  "right on",
+                  "that works",
+                  "sweet",
+                  "sounds good",
+                  "good",
+                  "correct",
+                  "right",
+                  "absolutely"
+                ],
+                "excludeKeywords": []
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "b8200aacbba67fab9e424668d67d15c9883ac9ac",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": true,
+      "name": "vertical card",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "UNIVERSAL",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "universalWidget": {
+                  "leMessageJson": "{$botContext.ut}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "// full (minimal) version\ncb.rich.create('ut', 'verticalCard', [\n  {\n    \"image\": \"https://upload.wikimedia.org/wikipedia/en/thumb/1/1c/New_Japan_Pro_Wrestling_Logo_2.svg/1200px-New_Japan_Pro_Wrestling_Logo_2.svg.png\"\n  },\n  {\n      \"text\": \"This is the New Japan Lion\",\n      \"tooltip\": \"This is a tooltip\", // if property missing, will use the text as the tooltip,\n      \"style\": { // optional\n        \"color\": \"#FFF\",\n        \"background-color\": \"#3E47A0\",\n        \"size\": \"medium\"\n      }\n    },\n    {\n      \"title\": \"New Japan\",\n      \"uri\": \"https://www.njpw1972.com\", // required\n      \"target\": null, // default value if target property not provided\n      \"tooltip\": null // optional, uses title if no value provided\n    },\n    {\n      \"title\": \"New Japan\", // transforms to postback button\n      \"postback\": \"Button Clicked!\", // optional, postback value will use title if no text provided\n      \"tooltip\": \"Click me!\" // optional\n    }\n]);\ncb.log(cb.getVar('ut'));\n\n// simple (minimal) version\ncb.rich.create('ut', 'verticalCard', [\n  {\n    \"image\": \"https://upload.wikimedia.org/wikipedia/en/thumb/1/1c/New_Japan_Pro_Wrestling_Logo_2.svg/1200px-New_Japan_Pro_Wrestling_Logo_2.svg.png\"\n  },\n  {\n    \"text\": \"This is the New Japan Lion\"\n  },\n  {\n    \"title\": \"New Japan\", // required\n    \"uri\": \"https://www.njpw1972.com\" // required\n  },\n  {\n    \"title\": \"New Japan\" // transforms to postback button\n  }\n]);",
+      "group": "c834ec71-8122-4cc2-923d-fae05ee0f1c7",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "5db83480cd214804b9c566eac748ef236dfd9640",
+      "prevMessageId": "02ab38c0e3d7831453bbc438b41a2452054636cb",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "UNIVERSAL",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "baa8fa3595210215673732425219adeec7913fbb",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "escalation_shift_status",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "DYNAMIC",
+        "responderName": "shift_status",
+        "responderId": "f4860df5-7bc4-4449-84ae-e8eae572e2ca"
+      },
+      "preProcessMessage": "cb.log('test from pre prc');",
+      "postProcessMessage": "cb.log('test from post prc');",
+      "group": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "536b90f9d88e56a5a7793b661f34a63174b3be47",
+      "prevMessageId": "76b9dd858c6a2687d29fe3cd5946149788bed08e",
+      "responseMatches": [
+        {
+          "name": "onshift",
+          "conditions": [
+            {
+              "matchType": "API_RESULT",
+              "apiResultsMatch": {
+                "status": "SUCCESS"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": [
+            {
+              "name": "ss_api_success",
+              "value": "true",
+              "scope": "SESSION"
+            }
+          ]
+        },
+        {
+          "name": "fail",
+          "conditions": [
+            {
+              "matchType": "API_RESULT",
+              "apiResultsMatch": {
+                "status": "FAILURE"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": [
+            {
+              "name": "ss_api_success",
+              "value": "false",
+              "scope": "SESSION"
+            }
+          ]
+        }
+      ],
+      "interactionType": "API_INTEGRATION",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "c4ee9ecd988330538ffd0e793f409853b0214f6b",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "init",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "BLANK_MESSAGE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "4e919206-001a-458b-9728-cf1e33f6d30b",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "744e10b358c4e1572230a8c942a815af9e124be2",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "cc695b9468cb2ac708c463a48eff3cef76425ab7",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "offer_escalation_continue",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Ok, let's continue",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "postProcessMessage": "cb.previous();",
+      "group": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "0bc9e591e222580e0980f64d4dbcfd468cd5f109",
+      "prevMessageId": "536b90f9d88e56a5a7793b661f34a63174b3be47",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "none"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "ce4a3dce5b9ebc60d07d94524ea84c3c59da8122",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "HOLD",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT_QUESTION",
+          "tile": {
+            "tileData": [
+              {
+                "text": "BLANK_MESSAGE",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "edde773e-8054-4945-bc75-7b201e0b42c9",
+      "status": "ACTIVE",
+      "required": true,
+      "responseMatches": [
+        {
+          "name": "NOTHING",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "29P7GH 32GFD9723D780 G2138D23D"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT_QUESTION",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "d020077e61754a5276e22e56c18ea7478824b4f5",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "KB_CONTENT_URL",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "UNIVERSAL",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": [],
+                "universalWidget": {
+                  "leMessageJson": "{$botContext.contentLink}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var KB = JSON.parse(cb.getVar('api_KB'));\ncb.log('results: ' + JSON.stringify(KB.api_KB.results[0])); // JSON.stringify()\nvar contentUrl = KB.api_KB.results[0].contentURL;\n \ncb.setVar('contentLink', JSON.stringify({\n  \"title\": \"See more details\",\n  \"tooltip\": \"Click me!\",\n  \"type\": \"button\",\n  \"style\": {\n    \"color\": \"#FFF\",\n    \"background-color\": \"#004976\",\n    \"size\": \"medium\"\n  },\n  \"click\": {\n    \"actions\": [\n      {\n        \"type\": \"link\",\n        \"uri\": contentUrl,\n        \"target\": \"slideout\"\n      }\n    ]\n  }\n}));",
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "451df40a7ca2ec2df9d8e62d9df3d60bd67ae15e",
+      "prevMessageId": "98a8cecc91ff912f4d9a7e0e6e97c0ecd5635811",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "UNIVERSAL",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "d456dd018e5c15083ef2ca514fc7c8128ce7e2c1",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "start_auth",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Hi, please ask me a question and I'll do my best to find an answer - or selected from a topic below",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 2
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var str = \"Hi, please ask me a question and I'll do my best to find an answer - or selected from a topic below\";\n",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "FAQs",
+          "payload": "FAQs"
+        },
+        {
+          "type": "text",
+          "title": "accreditation",
+          "payload": "accreditation"
+        },
+        {
+          "type": "text",
+          "title": "Search the PIC registry",
+          "payload": "Search the PIC registry"
+        },
+        {
+          "type": "text",
+          "title": "lost cattle",
+          "payload": "lost cattle"
+        }
+      ],
+      "group": "df4bd985-2468-47e7-bad0-e8f8fa14481f",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "d8f63e2fb832b6194b8953004eda0f92606193fd",
+      "responseMatches": [
+        {
+          "name": "nothing",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "q09y 3df 1-[hd11d2"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "d4d9a8c1a757651245f155b6bbd3c52fb6b54b3f",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_31",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "// var ar = [ { name: 'zed'}, { name: 'mick'}, { name: 'barry'}, { name: 'geoff'}, { name: 'alan'}, ];\n//var x = cb.sortObjArray(ar, 'name');\n\nvar ar = [10, 9, 8, 1];\nvar x = cb.sortArray(ar);\ncb.log(JSON.stringify(x));\n  ",
+      "group": "9123fa1a-c582-40b6-86d9-6a33ca581725",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d5321e159da829830000cff5f2e51acee58420c5",
+      "prevMessageId": "4d8d8d2ab1d06d0ad20c7584abac58fbbc92a541",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "d5321e159da829830000cff5f2e51acee58420c5",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": true,
+      "name": "universal_32",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "UNIVERSAL",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "9123fa1a-c582-40b6-86d9-6a33ca581725",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "d4d9a8c1a757651245f155b6bbd3c52fb6b54b3f",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "UNIVERSAL",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "d8d1a9c38172de5ffdc8f706e147b8be1e295cd2",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_35",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Your account balance is ${$botContext.balance}",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "// cb.initConv('text_35');\ncb.firstMessage();\n/*\ncb.checkAuth();\nvar d = String(cb.randomNumber(1, 9)) + String(cb.randomNumber(1, 9)) + String(cb.randomNumber(1, 9));\nvar numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];\nvar c = String(cb.randomArray(numbers)) + cb.randomArray(numbers);\ncb.setVar('balance', d + '.' + c);\n*/",
+      "group": "216878e4-1f7f-46cc-800c-104b4be7d75d",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "ee73f9ca178fc22e4e4ceff8892074b9dfad13e8",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "ce4a3dce5b9ebc60d07d94524ea84c3c59da8122"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "d8f63e2fb832b6194b8953004eda0f92606193fd",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "start",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "QUICK_REPLY",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Hi, please ask me a question and I'll do my best to find an answer - or selected from a topic below",
+                "buttons": [],
+                "quickReplyList": [],
+                "quickReplyWidget": {
+                  "choicesPerRow": 2
+                }
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var str = \"Hi, please ask me a question and I'll do my best to find an answer - or selected from a topic below\";\n",
+      "quickReplies": [
+        {
+          "type": "text",
+          "title": "FAQs",
+          "payload": "FAQs"
+        },
+        {
+          "type": "text",
+          "title": "accreditation",
+          "payload": "accreditation"
+        },
+        {
+          "type": "text",
+          "title": "logging in",
+          "payload": "logging in"
+        }
+      ],
+      "group": "df4bd985-2468-47e7-bad0-e8f8fa14481f",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d456dd018e5c15083ef2ca514fc7c8128ce7e2c1",
+      "prevMessageId": "16c0153473c927bb91a0f72fa1de7e3ee413cfd0",
+      "responseMatches": [
+        {
+          "name": "nothing",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "q09y 3df 1-[hd11d2"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "QUICK_REPLY",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "da3d79dc42a0e60ea83a3743aa1f944d653451da",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_41",
+      "intentId": "5ebc4f3f-3908-4a75-8f3e-4df0dc5792d3",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "5a361aea-05fa-4737-9ecb-0dac00b41c53",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "fd7276da3446f50479822f1b0957d83ac7b2d087",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "e14075e0bb83e0f425a0d7fbc3961dce502c07be",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "ANYTHING_ELSE",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "BUTTON",
+          "tile": {
+            "tileData": [
+              {
+                "text": "Is there anything else I can assist you with today?",
+                "buttons": [
+                  {
+                    "name": "Searching the PIC registry",
+                    "type": "postback",
+                    "callback": "Searching the PIC registry"
+                  },
+                  {
+                    "name": "Register for NLIS",
+                    "type": "postback",
+                    "callback": "Register for NLIS"
+                  },
+                  {
+                    "name": "How to order LPA NVDs",
+                    "type": "postback",
+                    "callback": "How to order LPA NVDs"
+                  },
+                  {
+                    "name": "Recording livestock movements",
+                    "type": "postback",
+                    "callback": "Recording livestock movements"
+                  }
+                ],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "5d259113-682b-4a1d-98e6-dec8c27a5829",
+      "status": "ACTIVE",
+      "required": true,
+      "responseMatches": [
+        {
+          "name": "nothing",
+          "conditions": [
+            {
+              "matchType": "EXACT_VALUE",
+              "exactValueMatch": {
+                "value": "19d7t 1237d g128d12d2"
+              }
+            }
+          ],
+          "contextConditions": [],
+          "contextMatchConditionType": "ANY",
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "BUTTON",
+      "changeResponse": {
+        "enabled": true
+      },
+      "cancelResponse": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "ee73f9ca178fc22e4e4ceff8892074b9dfad13e8",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "dialog_starter_34",
+      "pattern": [
+        "balance"
+      ],
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "DIALOG_STARTER",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "group": "216878e4-1f7f-46cc-800c-104b4be7d75d",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "d8d1a9c38172de5ffdc8f706e147b8be1e295cd2",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "DIALOG_STARTER"
+    },
+    {
+      "id": "f289fd3b060e3228e1e1e439738bba1491f4515c",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "helpful_yes",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "text": "That's great to hear! Thanks for the feedback",
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "postProcessMessage": "cb.previous();",
+      "group": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "status": "ACTIVE",
+      "required": true,
+      "nextMessageId": "045b67300c9ad4d25fa160815131c6bb4d430966",
+      "prevMessageId": "451df40a7ca2ec2df9d8e62d9df3d60bd67ae15e",
+      "responseMatches": [
+        {
+          "name": "RULE_1",
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "none"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    },
+    {
+      "id": "fd7276da3446f50479822f1b0957d83ac7b2d087",
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "userInputRequired": false,
+      "name": "text_42",
+      "type": "BOT_MESSAGE",
+      "content": {
+        "contentType": "STATIC",
+        "results": {
+          "type": "TEXT",
+          "tile": {
+            "tileData": [
+              {
+                "buttons": [],
+                "quickReplyList": []
+              }
+            ]
+          }
+        }
+      },
+      "preProcessMessage": "var x = cb.getNamedEntities('products');\ncb.log(JSON.stringify(x));\nif (x) {\n  var value = x.entity;\n  var category = x.category;\n  \n}",
+      "group": "5a361aea-05fa-4737-9ecb-0dac00b41c53",
+      "status": "ACTIVE",
+      "required": true,
+      "prevMessageId": "da3d79dc42a0e60ea83a3743aa1f944d653451da",
+      "responseMatches": [
+        {
+          "conditions": [],
+          "contextConditions": [],
+          "action": {
+            "name": "INTERACTION",
+            "value": "next"
+          },
+          "contextDataVariables": []
+        }
+      ],
+      "interactionType": "TEXT"
+    }
+  ],
+  "menus": [],
+  "groups": [
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "0308bf48-d1b2-4d64-8589-106d7e0bb7fb",
+      "name": "02b (Auth) account info",
+      "creationTime": "2022-06-23 19:43:46",
+      "modificationTime": "2022-06-23 19:43:46",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "0e97942a-823a-4f79-9ee5-35c09d6c58aa",
+      "name": "00h go back",
+      "creationTime": "2022-06-23 19:58:04",
+      "modificationTime": "2022-06-23 19:58:04",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "216878e4-1f7f-46cc-800c-104b4be7d75d",
+      "name": "02c account balance",
+      "creationTime": "2022-06-23 19:46:30",
+      "modificationTime": "2022-06-23 19:46:30",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "220d7caa-cd6d-42f5-ba90-d534e001e2c0",
+      "name": "00d escalation",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "28433c02-8bee-40c7-9757-b5e284d057b3",
+      "name": "02a Regex Slots",
+      "creationTime": "2022-06-19 23:46:24",
+      "modificationTime": "2022-06-19 23:46:24",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "4e919206-001a-458b-9728-cf1e33f6d30b",
+      "name": "00b initialisation",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "5a361aea-05fa-4737-9ecb-0dac00b41c53",
+      "name": "t1",
+      "creationTime": "2022-06-23 20:20:58",
+      "modificationTime": "2022-06-23 20:21:03",
+      "dialogType": "DIALOG",
+      "domainId": "9584850a-0f72-463f-9d0c-409c21dc4f46",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "5d259113-682b-4a1d-98e6-dec8c27a5829",
+      "name": "00g Anything Else",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "8e1aebcb-31be-4a7b-acb0-3e5b0247107d",
+      "name": "00e step_up auth",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "9123fa1a-c582-40b6-86d9-6a33ca581725",
+      "name": "test",
+      "creationTime": "2022-06-19 20:31:21",
+      "modificationTime": "2022-06-19 20:31:21",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "c834ec71-8122-4cc2-923d-fae05ee0f1c7",
+      "name": "00z Rich Content Examples",
+      "creationTime": "2022-06-19 19:54:25",
+      "modificationTime": "2022-06-19 19:54:25",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "cc84c790-9001-443e-adb2-1d70ac2e4d20",
+      "name": "00a fallback",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "FALLBACK_DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "df4bd985-2468-47e7-bad0-e8f8fa14481f",
+      "name": "01_Start",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "edde773e-8054-4945-bc75-7b201e0b42c9",
+      "name": "00f holding",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    },
+    {
+      "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "id": "ee8b3bca-6592-4928-b4e2-0bbc16ff9ea0",
+      "name": "00c system_message",
+      "creationTime": "2022-06-19 19:23:48",
+      "modificationTime": "2022-06-19 19:23:48",
+      "dialogType": "DIALOG",
+      "status": "ENABLED",
+      "disambiguteOnlySelectedDomains": false
+    }
+  ],
+  "globalFunctions": {
+    "chatBotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+    "methods": "// CB_Global_Functions: v.1.1 (last update 22-june-2022)\n \n/**** Global Functions layout ****/\n// 1. Arrays\n// 2. CB Function Aliases\n// 3. CB helper Functions (to control management/flow of conversation)\n// 4. Settings; including default escalation, transfer, unmatched phrase responses; auto-escalation settings, timezone offset, and \"starting\" & \"initialisation\" interaction names.\n// 5. \"__initConversation()\" function, which executes once at the beginning of each new Bot Session\n\n// resevered variables\nvar cb = {}; var bc = botContext;\nvar arrays = {\n  yes: [\"👍\", \"yes\", \"yse\", \"yeah\", \"yep\", \"yup\", \"sure\", \"correct\"],\n  no: [\"👎\", \"no\", \"nah\", \"nope\", \"not sure\"],\n  months_long: [ \"January\", \"February\", \"March\", \"April\", \"May\", \"June\", \"July\", \"August\", \"September\", \"October\", \"November\", \"December\", ],\n  months_short: [ \"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\", ],\n  days_short: [\"sun\", \"mon\", \"tues\", \"wed\", \"thurs\", \"fri\", \"sat\"],\n  days_long: [ \"sunday\", \"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\", \"saturday\", ],\n  place_types: { accounting: \"💲\", airport: \"✈️\", amusement_park: \" 🎢\", aquarium: \" 🐠\", art_gallery: \" 🧑‍🎨\", atm: \" 🏧\", bakery: \" 🥯\", bank: \" 🏦\", bar: \" 🥂\", beauty_salon: \" 💅\", bicycle_store: \" 🚴‍♂️\", book_store: \" 📚\", bowling_alley: \" 🎳\", bus_station: \" 🚌\", cafe: \"☕\", campground: \" 🏕️\", car_dealer: \" 🚙\", car_rental: \" 🚙\", car_repair: \" 🚙\", car_wash: \" 🚙🚿\", casino: \" 🎰\", cemetery: \" ⚰️\", church: \" 🛐\", city_hall: \"\", clothing_store: \" 👕\", convenience_store: \" 🏪\", courthouse: \" 👨‍⚖️\", dentist: \" 🦷\", department_store: \" 🏬\", doctor: \" 👩‍⚕️\", drugstore: \" 💊\", electrician: \" 🔌\", electronics_store: \" 📱\", embassy: \" 🏢\", fire_station: \" 🧑‍🚒\", florist: \" 💐\", funeral_home: \" ⚰️\", furniture_store: \" 🪑\", gas_station: \" ⛽\", gym: \" 🏋️\", hair_care: \" 💇\", hardware_store: \" 🛠️\", hindu_temple: \" 🛐\", home_goods_store: \" 🏠\", hospital: \" 🏥\", insurance_agency: \" 📝\", jewelry_store: \" 💍\", laundry: \" 🧺\", lawyer: \" 🧑‍⚖️\", library: \" 📚\", light_rail_station: \" 🚃\", liquor_store: \" 🥃\", local_government_office: \" 🏢\", locksmith: \" 🔐\", lodging: \" 🏨\", meal_delivery: \" 🍽️\", meal_takeaway: \" 🍽️\", mosque: \" 🛐\", movie_rental: \" 📼\", movie_theater: \" 🍿\", moving_company: \" 📦\", museum: \" 🦖\", night_club: \" 🕺\", painter: \" 👨‍🎨\", park: \" 🏞️\", parking: \" 🅿️\", pet_store: \" 🐶\", pharmacy: \" 💊\", physiotherapist: \" 👩‍⚕️\", plumber: \" 👨‍🔧\", police: \" 👮‍♂️\", post_office: \" 🏣\", primary_school: \" 🏫\", real_estate_agency: \"  💰🏘️\", restaurant: \" 🍽️\", roofing_contractor: \" 🏠\", rv_park: \"  🚚🅿️\", school: \" 🏫\", secondary_school: \" 🏫\", shoe_store: \" 👞\", shopping_mall: \" 🛍️\", spa: \" 🧖‍♂️🧖‍♀️\", stadium: \" 🏟️\", storage: \" 📦\", store: \" 🏬\", subway_station: \" 🚄\", supermarket: \" 🏪\", synagogue: \" 🛐\", taxi_stand: \" 🚕\", tourist_attraction: \" 🗻🗼🌋\", train_station: \" 🚄\", transit_station: \" 🚄\", travel_agency: \" 💱\", university: \" 🎓\", veterinary_care: \"  👨‍⚕️🐶\", zoo: \" 🐯🐘\" }\n};\n\nvar conversation_Builder_Function_Aliases = {\n  // manaing the Conversation Context Service\n  // https://developers.liveperson.com/conversation-builder-scripting-functions-manage-the-conversation-context-service.html\n  // setting data\n  setNamespace: function (n, ttl) { /* ttl = seconds */ bc.registerContextNamespace(n, ttl); },\n  setContextConv: function (n, p, v) { this.log(\"set context data for conversation scope: \" + bc.setContextDataForConversation(n, p, v)); },\n  setContextUser: function (n, p, v) { this.log(\"set context data for user scope: \" + bc.setContextDataForUser(n, p, v)); },\n  setContextGlobal: function (n, p, v) { this.log(\"set context global scope: \" + bc.setGlobalContextData(n, p, v)); },\n  \n  // getting data\n  // to get ALL variables from a namespace, omit the property (only valid for conversation and user scopes)\n  getContextConv: function (n, p) { return bc.getContextDataForConversation(n, p); },\n  getContextUser: function (n, p) { return bc.getContextDataForUser(n, p); },\n  getContextGlobal: function (n, p) { return bc.getGlobalContextData(n, p); },\n  \n  // deleting data\n  deleteContextConv: function (n, p) { return bc.deleteContextDataForConversation(n, p); },\n  deleteContextUser: function (n, p) { return bc.deleteContextDataForUser(n, p); },\n  deleteContextGlobal: function (n, p) { return bc.deleteGlobalContextData(n, p); },\n  deleteContextUserAll: function (n) { return bc.deleteAllContextDataForUser(n); },  \n  deleteContextConversationAll: function (n) { return bc.deleteAllContextDataForConversation(n); },\n\n  askMaven: function () { return bc.askMaven(); },\n  delay: function (a) { bc.setMessageDelay(a); /* add to pre-process code */},\n  logEvent: function (user_message, event_name, event_details) { bc.logCustomEvent(user_message, event_name, event_details); },\n  getEnvVar: function (e) { return bc.getEnvVariable(e); },\n  getVar: function (a) { return bc.getBotVariable(a); },\n  ignoreMax: function () { bc.setAllowMaxTextResponse(true); },\n  jumpTo: function (interaction_name) { bc.setTriggerNextMessage(interaction_name); },\n  log: function (e) { bc.printDebugMessage(e); },\n  logVar: function (a, b) { bc.printDebugMessage(a + \": \" + b); },\n  msgs: function (val) { bc.sendMessages(val); },\n  QR: function (message, array) { bc.sendMessageWithQuickReplies(message, array); },\n  setVar: function (a, b) { bc.setBotVariable(a, b, true, false); },\n  setVarDialog: function (arg, val) { bc.setBotVariable(arg, val, true, false); },\n  setVarPerm: function (arg, val) { bc.setBotVariable(arg, val, true, true); },\n  txt: function (arg) { bc.sendMessage(arg); },\n  userSaid: function () { return bc.getCurrentUserMessage(); },\n  // get webview variables\n  wvvar: function (val) { return bc.getWebViewVariable(val); },\n};\n\nvar conversation_Builder_Helper_Functions = {\n  // manage auth state within Bot\n  setAuth: function (a) { this.setVar('isAuth', a); },\n  checkAuth: function () {\n    var isa = cb.tf(cb.getVar('isAuth'));\n    if (!isa) cb.jumpTo('NOT_AUTHENICATED');\n    return ;\n  },\n  \n  // simple method to get variable type\n  typeOf: function (data) {\n    if (!data) return null;\n    if (typeof data === 'object' && Array.isArray(data)) return 'array';\n    if (typeof data === 'object') return 'object';\n    return typeof data;\n  },\n\n  // substitue for ARRAY.find((x) => { x === y }) and ARRAY.findIndex((x) => { x === y })\n  // the array to search, property to target and value to match\n  \n  objFind: function (array, property, value) {\n    var a = [\n      { name: 'billy' } ,\n      { name: 'sam' }\n    ];\n    cb.objFind(a, 'name', 'sam');\n    for (var i in array) {\n      if (!array[i][property]) continue;\n      var val = typeof value === 'string' ? value.toLowerCase() : value;\n      var prop = typeof array[i][property] === 'string' ? array[i][property].toLowerCase() : array[i][property];\n      if (prop === val) { \n        return {\n          val: array[i],\n          index: i\n        };\n      }\n    }\n  },\n  \n  // converts java.util.HashMap to standard JSON object\n  // required to convert data when retreieving ALL variables from Context Service as per: https://developers.liveperson.com/conversation-builder-scripting-functions-manage-the-conversation-context-service.html#get-all-variables\n  convertHash: function (map) {\n    var obj = {};\n    var stringOfMap = map.toString();\n    map.keySet().forEach(function(k, i) {\n      obj[k] = map[k];\n    });\n    return obj;\n},\n  \n  // convert properties from an JSON object into botContext (session) variables\n  objToVars: function (a) { var t = this; Object.keys(a).forEach(function (key) { t.setVar(key, a[key]); }); },\n\n  // returns an array of matched entity values and categories based on the consumer message\n  // example entity: (PRODUCT) = 's22¬mobile device'. 's22' is the value, mobile device is the category (values are seprated by the tilda (¬)).\n  getNamedEntities: function (entity) {\n    var output = { result: false }; var entityArray = botContext.getNamedEntities(entity); output.entity = []; output.category = null; if (entityArray != null && entityArray.length > 0) { for (j = 0; j < entityArray.length; j++) { this.log('ENTITY (' + j + '):  ' + entityArray[j].getPhrase() + ' | ' + 'Classifier: ' + entityArray[j].getDataValue()); output.category = entityArray[j].getDataValue(); output.entity.push(entityArray[j].getPhrase()); output.result = true; } } return output;\n  },\n\n  // injects a 'welcome' message into the conversation if not already sent\n  firstMessage: function (welcomeMessage) { var fm = this.tf(this.getVar(\"isConvStarted\")); if (welcomeMessage && !fm) { this.welcome(); } this.setVar(\"isConvStarted\", true); return !fm; },\n\n  // injects 'welcome' message into a conversation (if not already sent)\n  welcome: function () { var a = this.getVar(\"welcomeMessage\"); if (!this.tf(this.getVar(\"isWelcomeSent\")) && !!a) { this.setVar(\"isWelcomeSent\", true); this.txt(a); } },\n\n  // simple ES5 substitute for ES6 \"includes()\" method to search array\n  contains: function (array, string) { return array.indexOf(string) >= 0; },\n  \n  randomNumber: function (min, max) {\n    return Math.floor(Math.random() * (max - min + 1)) + min;\n  },\n  \n  // returns random item from an array... usage example:\n  // var hotwords = ['awesome', 'cool', 'much wow', 'amazing'];\n  // cb.txt('that is ' + cb.randomArray(hotwords) + '!'); = 'that is much wow!'\n  randomArray: function (array) { return  array[Math.floor(Math.random()*array.length)]; },\n  \n  // sorts array in ascending order (by default) based on alpha-numeric values;\n  // 2 arguments (<array>, <isDescending:true/false>[optional]), \n  // e.g: var array = [109, 88, 77, 1];\n  // cb.sortObjArray(array, 'name'); // log = [1, 77, 88, 109];\n  sortArray: function (array, isDesc) { function c( a, b ) { if (typeof a === 'number') { if ( a < b){ return isDesc ? 1 : -1; } if ( a > b){ return isDesc ? -1 : 1; } } else if (typeof a === 'string') { if ( a.toLowerCase() < b.toLowerCase()){ return isDesc ? 1 : -1; } if ( a.toLowerCase() > b.toLowerCase()){ return isDesc ? -1 : 1; } } return 0; } return array.sort(c); },\n  \n  // 3 arguments (<array>, <property>, <isDescending:true/false>[optional]), \n  // cb.sortObjArray(array, 'name'); // log = [{ name: \"barry\"}, { name: \"zara\"}];\n  sortObjArray: function (array, prop, isDesc) { function c( a, b ) { var p = a[prop]; var v = b[prop]; if (typeof p === 'number') { if ( p < v){ return isDesc ? 1 : -1; } if ( p > v){ return isDesc ? -1 : 1; } } else if (typeof p === 'string') { if ( p.toLowerCase() < v.toLowerCase()){ return isDesc ? 1 : -1; } if ( p.toLowerCase() > v.toLowerCase()){ return isDesc ? -1 : 1; } } return 0; } return array.sort(c); },\n\n  // Counts words in a string\n  countWords: function (s) { s = s.replace(/(^\\s*)|(\\s*$)/gi, \"\"); s = s.replace(/[ ]{2,}/gi, \" \"); s = s.replace(/\\n /, \"\\n\"); return s.split(\" \").filter(function (str) { return str != \"\"; }).length; },\n\n  // forces Bot to run through the 'INIT' Dialog and execute API integrations beforing returning to original interaction\n  // takes in the name of the interaction where this function is called (so it can return to the same interaction\n  // this should be placed in EVERY dialog starter within pre-process code of first interaction\n  initConv: function (I_N) { this.setVar(\"breadcrumb\", !I_N ? this.getVar(\"firstInteraction\") : I_N); if (!this.tf(this.getVar(\"INIT\"))) { this.setVar(\"INIT\", true); this.trail(I_N); this.jumpTo(this.getVar(\"init_interaction\")); } },\n\n  // returns to previous interaction (set using \"trail()\"), or if not yet set, returns to \"firstInteraction\", which is defined in SETTINGS below\n  // if first message is not matched - and bot subsequently triggers fallback for the first message, the 'trail()' function would not have been called yet, and therefore the 'first' interaction should be defined in global functions so the Bot can start on the desired starting point.\n  previous: function () { var c = this.getVar(\"breadcrumb\") || this.getVar(\"firstInteraction\"); if (!c) { return; } this.log(\"previous(): interaction: \" + c); this.jumpTo(c); },\n\n  // Manages the responses for unmatched user phrases and escalation.\n  // sends error response messages from the \"unmatchedResponses\" property in SETTINGS.\n  // if 'sequential' parameter is true, the function will send the error messages in the order defined in the array, otherwise it will send randomly.\n  // if the user message exceeds the LONG_MESSAGE_LIMIT (defined in SETTINGS), the LONG_MESSAGE_RESPONSE will be sent as a message.\n  // When the \"errorThreshold\" is reach (defined in settings), the function will go to the interaction provided (escalationName parameter)\n  unmatched: function (sequential, escalationName) { var ec = Number(cb.getVar(\"errorCount\")); var et = Number(cb.getVar(\"errorThreshold\")); var w = cb.countWords(cb.userSaid()); var u = JSON.parse(cb.getVar(\"unmatchedResponses\")); var last = cb.getVar(\"lerrorR\"); var idx = last ? u.indexOf(last) : null; if (escalationName && ec > et) { this.txt(this.getVar(\"ERROR_LIMIT_MESSAGE\")); if (escalationName) { this.jumpTo(escalationName); } else { cb.previous(); } return; } else if (Number(w) >= Number(cb.getVar(\"LONG_MESSAGE_LIMIT\"))) { cb.txt(cb.getVar(\"LONG_MESSAGE_RESPONSE\")); } else { if (!sequential) { var a = Math.floor(Math.random() * u.length); while (a === idx) { a = Math.floor(Math.random() * u.length); } cb.txt(u[a]); cb.setVar(\"lerrorR\", u[idx]); } else { idx = idx === u.length - 1 || idx === null ? 0 : idx + 1; cb.setVar(\"lerrorR\", u[idx]); this.txt(u[idx]); } } cb.previous(); return; },\n\n  // Records the current interaction and adds to historical array and increments an 'errorCount' (which is used by the 'unmatched()' function).\n  // Also used by the 'previous()', 'goBack()', and 'initConv()' functions.\n  trail: function (val) {\n    var count = Number(botContext.getBotVariable(\"errorCount\")); var breadcrumb = botContext.getBotVariable(\"breadcrumb\"); /* reset error counter if conversation has moved to a new interaction */ if (breadcrumb !== val) { count = 0; } botContext.setBotVariable(\"errorCount\", count, true, false); botContext.setBotVariable(\"breadcrumb\", val, true, false); /* add interaction name to interaction history array */ var ih = botContext.getBotVariable(\"interactionHistory\"); ih = ih ? JSON.parse(ih) : []; ih.push(val); this.log(\"array: \" + JSON.stringify(ih)); botContext.setBotVariable(\"interactionHistory\", JSON.stringify(ih), true, false);\n  },\n\n  // Uses the interaction history created by the 'trail()' function, and returns to the last interaction recorded in the array (and removes it from the array)\n  goBack: function () {\n    var bc = this.getVar(\"interactionHistory\"); bc = bc ? JSON.parse(bc) : []; if (bc.length === 0) { this.log(\"Cannot goBack any further, end of interaction history\"); return; } var s = bc.splice(0, bc.length - 1); var l = s.pop(); this.setVar(\"interactionHistory\", JSON.stringify(s)); this.jumpTo(l);\n  },\n\n  // to review and remove\n  returnCustomerInfo: function (customerInfo) { if (customerInfo) { this.log(\"customerId:\" + customerInfo.customerId); return customerInfo.customerId; } else { return \"not available\"; }},\n\n  // simply returns a Booean of true/false, ensuring\n  tf: function (e) { return e == \"true\" || e == true; },\n\n  // takes an epoch timestamp (in milliseconds) and returns localised time formats\n  convertTime: function (time, tzOffset) {\n    /* capitalise string*/ function cap(string) { return string.charAt(0).toUpperCase() + string.slice(1); } /* add preceding 0 to single digit numbers*/ function addZ(e) { return e < 10 ? '0' + e : e; } function ampm(e) { return e < 12 ? 'am' : 'pm'; } /* format as ordinal*/ function nth(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return \"st\"; case 2: return \"nd\"; case 3: return \"rd\"; default: return \"th\"; } } /* get weekOfYear */ function week(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7); return weekNo; } /* declare required variables */ tzOffset = (Number(tzOffset || Number(cb.getVar('tz')))) * 3600000; var gmtOffset = Number(new Date().getTimezoneOffset() * 60000); var c = \":\"; var d = \"-\"; var days = arrays.days_long; var MONTHS_LONG = arrays.months_long; var MONTHS_SHORT = arrays.months_short; var queryTime = new Date(time + tzOffset + gmtOffset); var _n = Date.now(); var present = new Date(_n + tzOffset + gmtOffset); /* get day of year*/ function dayAndYear(time) { var now = new Date(time); var start = new Date(now.getFullYear(), 0, 0); var year = now.getFullYear(); var diff = now - start; var oneDay = 1000 * 60 * 60 * 24; var day = Math.floor(diff / oneDay); return { day: day, year: year }; } /* calculate variances between given time and current time */ function variances(present, queryTime) { var p = dayAndYear(present); var q = dayAndYear(queryTime); var days = (((q.year - 1) * 365) + q.day) - (((p.year - 1) * 365) + p.day); var ms = queryTime - present; var seconds = ms / 1000; var minutes = seconds / 60; var hours = minutes / 60; var weeks = days / 7; var months = days / (365 / 12); var years = days / 365; return { years: years, months: months, weeks: weeks, days: days, hours: hours, minutes: minutes, seconds: seconds, ms: ms }; } var relativeTimes = function (vary, tu) { var a; var q = tu.queryTime; var p = tu.present; var isFuture = q.epoch > p.epoch; var dateString = cap(arrays.days_long[q.day]) + ' the ' + q.date + nth(q.date) + ' of ' + arrays.months_long[q.month - 1]; var hour = q.hour > 12 ? q.hour - 12 : addZ(q.hour); var timeString = hour + ':' + addZ(q.minute); /* if next year (and at least more than 1 month) */ if (isFuture && (q.year - p.year) >= 1 && vary.months >= 2) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ', ' + dateString + ' (' + q.year + ').'; } /* 2 months or more in future */ else if (isFuture && vary.months > 1) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ', ' + dateString + ' (' + q.year + ').'; } /* less than 2 months in future but more than 1 week (next month)*/ else if (isFuture && vary.months < 2 && vary.weeks >= 2) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ', ' + cap(arrays.days_long[q.day]) + ' the ' + q.date + nth(q.date) + ' (next month)'; } /* next week */ else if (isFuture && vary.months < 2 && (q.week - p.week) === 1) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ', next ' + cap(arrays.days_long[q.day]); } /* this week (after tomorrow) */ else if (isFuture && vary.months < 2 && (q.week - p.week) === 0 && vary.days > 1) { a = cap(arrays.days_long[q.day]) + ' ' + (q.minute === 0 ? hour : timeString) + ampm(q.hour); } /* this week (tomorrow) */ else if (isFuture && vary.months < 2 && (q.week - p.week) === 0 && vary.days === 1) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ' tomorrow'; } /* today */ else if (isFuture && vary.days === 0 && vary.minutes > 10) { /* evening */ if (q.hour > 18) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ' this evening'; } /* afternoon */ if (q.hour > 12) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ' this afternoon'; } /* morning */ if (q.hour < 12) { a = (q.minute === 0 ? hour : timeString) + ampm(q.hour) + ' this morning'; } } else if (isFuture && vary.days === 0 && vary.minutes < 10 && vary.minutes > 5) { a = 'in 5 to 10 minutes'; } else if (isFuture && vary.days === 0 && vary.minutes < 10 && vary.minutes <= 5) { a = 'in a few minutes'; } return a; }; var timeUnits = function (time) { var u = { epoch: time.getTime(), year: time.getFullYear(), month: time.getMonth(), week: week(time), date: time.getDate(), day: time.getDay(), hour: time.getHours(), minute: time.getMinutes(), second: time.getSeconds(), ms: time.getMilliseconds(), full: null, }; u.full = days[u.day] + \", \" + u.date + d + MONTHS_LONG[u.month] + d + u.year + \",\" + addZ(u.hour) + c + addZ(u.minute) + c + addZ(u.second); return u; }; /* MAIN FUNCTION EXECUTION */ var a = { timeUnits: { present: timeUnits(present), queryTime: timeUnits(queryTime) }, variance: variances(present, queryTime), relative: null }; a.relative = relativeTimes(a.variance, a.timeUnits); return a;\n  },\n\n  // creates unique IDs, similar to uuidv4()\n  uuid: function () { // Public Domain/MIT\n    var d = new Date().getTime();//Timestamp\n    var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n        var r = Math.random() * 16;//random number between 0 and 16\n        if(d > 0){//Use timestamp until depleted\n            r = (d + r)%16 | 0;\n            d = Math.floor(d/16);\n        } else {//Use microseconds since page-load if supported\n            r = (d2 + r)%16 | 0;\n            d2 = Math.floor(d2/16);\n        }\n        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);\n    });\n},\n\n  // Simplifies programatic generataion of rich content for Universal Tiles\n  rich: {\n    create: function (name, type, content) {\n      var c = conversation_Builder_Function_Aliases;\n      if (type === 'walist') {\n        var con = this.walist(content);\n        c.log(\"content: \" + con);\n        c.setVar(name, JSON.stringify(con));\n      } else if (type === 'wabuttons') {\n        c.setVar(name, JSON.stringify(this.wabuttons(content)));\n      } else if (type === 'verticalCard') {\n        c.setVar(name, JSON.stringify(this.verticalCard(content)));\n      } else if (type === 'carousel') {\n        c.setVar(name, JSON.stringify(this.carousel(content)));\n      }\n    },\n    wabuttons: function (a) {\n      if (!a.title || !a.buttons || a.buttons.length === 0) return;\n      var card = {\n        \"type\": \"vertical\",\n        \"tag\": \"generic\",\n        \"elements\": [\n        ]\n      };\n      if (a.title) {\n        card.elements.push({\n          \"type\": \"text\",\n          \"text\": a.title,\n          \"tag\": \"title\"\n        });\n      }\n      a.buttons.forEach(function (button) {\n        card.elements.push({\n          \"type\": \"button\",\n          \"title\": button.title,\n          \"click\": {\n            \"actions\": [\n              {\n                \"type\": \"publishText\",\n                \"text\": button.label || button.title\n              }\n            ]\n          }\n        });\n      });\n      return card;\n    },\n    walist: function (a) {\n      if (!a.buttonLabel) { cb.log('button label missing'); return; }\n      if (!a.title) { cb.log('title missing'); return; }\n      var card = {\n        \"type\": \"vertical\",\n        \"tag\": \"list\",\n        \"elements\": [\n          {\n            \"type\": \"vertical\",\n            \"elements\": [\n              {\n                \"type\": \"text\",\n                \"text\": a.title,\n                \"tag\": \"title\"\n              }\n            ]\n          }\n        ]\n      };\n      if (a.subtitle) {\n        card.elements[0].elements.push({\n          \"type\": \"text\",\n          \"text\": a.subtitle,\n          \"tag\": \"subtitle\"\n        });\n      }\n      if (a.footer) {\n        card.elements[0].elements.push({\n          \"type\": \"text\",\n          \"text\": a.footer,\n          \"tag\": \"subtitle\"\n        });\n      }\n      card.elements[0].elements.push({\n          \"type\": \"button\",\n          \"tag\": \"menu\",\n          \"title\": a.buttonLabel,\n          \"click\": {\n            \"actions\": [\n              {\n                \"type\": \"publishText\",\n                \"text\": a.buttonLabel\n              }\n            ]\n          }\n        });\n        a.sections.forEach(function(section) {\n          var sCard = {\n            \"type\": \"horizontal\",\n            \"elements\": [\n              {\n                \"type\": \"vertical\",\n                \"elements\": [\n                  {\n                    \"type\": \"text\",\n                    \"tag\": \"title\",\n                    \"text\": section.title\n                  }\n                ]\n              }\n            ]};\n          section.buttons.forEach(function(b) {\n            sCard.elements[0].elements.push({\n              \"type\": \"button\",\n              \"title\": b.title,\n              \"subtitle\": b.subtitle,\n              \"click\": {\n                \"actions\": [\n                  {\n                    \"type\": \"publishText\",\n                    \"text\": b.title\n                  }\n                ]\n              }\n            });\n          });\n          card.elements[0].elements.push(sCard);\n        });\n      return card;\n    },\n    verticalCard: function (a) {\n      cb.log(a);\n      var card = {\n        \"type\": \"vertical\",\n        \"elements\": []\n      };\n      a.forEach(function (el) {\n        // text element\n        if (el.hasOwnProperty('text')) {\n          card.elements.push({\n            \"type\": \"text\",\n            \"text\": el.text,\n            \"tooltip\": el.tooltip || el.text,\n            \"style\": el.style\n          });\n        }\n        // link button (open url)\n        else if (el.hasOwnProperty('uri')) {\n          card.elements.push({\n            \"type\": \"button\",\n            \"title\": el.title,\n            \"tooltip\": el.tooltip || el.text,\n            \"style\": el.style,\n            \"click\": {\n              \"actions\": [\n                {\n                  \"type\": \"link\",\n                  \"uri\": el.uri,\n                  \"target\": el.target || 'blank'\n                }\n              ]\n            }\n          });\n        }\n        // postback button\n        else if (el.hasOwnProperty('postback')) {\n          card.elements.push({\n            \"type\": \"button\",\n            \"title\": el.title,\n            \"tooltip\": el.tooltip || el.text,\n            \"style\": el.style,\n            \"click\": {\n              \"actions\": [\n                {\n                  \"type\": \"publishText\",\n                  \"text\": el.posstback || el.title\n                }\n              ]\n            }\n          });\n        }\n        // image\n        else if (el.hasOwnProperty('image')) {\n          card.elements.push({\n            \"type\": \"image\",\n            \"url\": el.image,\n            \"caption\": el.caption,\n            \"tooltip\": el.tooltip || el.caption,\n            \"click\": {}\n          });\n        }\n      });\n      return card;\n    },\n    carousel: function (a) {\n      if (a.length === 1) {\n        return a[0];\n      }\n      return {\n        \"padding\": 10,\n        \"type\": \"carousel\",\n        \"elements\": a\n      };\n    }\n  }\n};\n// for Google Maps location (calculates distances between 2 sets for geo-coordinates(\nfunction distance(lat1, lon1, lat2, lon2) {\n    var R = 6371; // Radius of the earth in km\n    var dLat = deg2rad(lat2-lat1);  // deg2rad below\n    var dLon = deg2rad(lon2-lon1);\n    var a =\n      Math.sin(dLat/2) * Math.sin(dLat/2) +\n      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *\n      Math.sin(dLon/2) * Math.sin(dLon/2)\n      ;\n    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));\n    var d = R * c; // Distance in km\n    return d;\n  }\nfunction deg2rad(deg) {\n    return deg * (Math.PI/180);\n  }\n\n// assign functions to 'cb'\nvar aA = conversation_Builder_Function_Aliases; var aB = conversation_Builder_Helper_Functions;\nfor (var a in Object.keys(aA)) { cb[Object.keys(aA)[a]] = aA[Object.keys(aA)[a]]; }\nfor (var a in Object.keys(aB)) { cb[Object.keys(aB)[a]] = aB[Object.keys(aB)[a]]; }\n\n// for defining LP API host domains\nvar region = \"sy\";\nvar regionCode = region === \"sy\" ? \"z3\" : region === \"lo\" ? \"lo\" : \"va\";\nvar brandName = \"Liveperson\";\n\nvar SETTINGS = {\n  DEFAULTS: {\n    botId: botContext.chatBotId,\n    // for google locations (need better place to store Google API key!)\n    googleAPIKey: \"\",\n    maxLocationResults: 3,\n    brandName: brandName,\n    // Default timezone offset (GMT+ -> your offset).\n    tz: 11,\n    // Default skill ID/Name (name is not required for agent transfer). This is for cases where the conversation\n    // is escalated before routing is confirmed\n    skillId: '1400599670',\n    defaultSkillName: \"\",\n    // default namespace for setting attributes in CCS\n    namespace: 'debug'\n  },\n  DEFAULT_CONVERSATION_MESSAGES: {\n    authMessage: \"Please log into your account so that I can provide you with personalised information related to your account\",\n    offerEscalationMessage: \"Would you like to speak with a human?\",\n    unmatchedResponses: JSON.stringify([\n      \"Sorry, I didn't quite get that\",\n      \"Please try rephrasing\",\n      \"I'm stumped! Try asking a simple question (one at a time)\",\n    ]),\n    transferMessage: \"BLANK_MESSAGE\",\n    welcomeMessage: \"Hi!, I'm the *\" + brandName  + \"* In Virtual Assistant. How can I help today?\",\n    escalationMessage: \"It seem's I'm having some trouble, please bear with me a moment while I check if there's a human supervisor who can assist\",\n    LONG_MESSAGE_RESPONSE: \"That's a big question, please try rephrasing with a shorter question (I work best with short, concise questions)\",\n    ERROR_LIMIT_MESSAGE: \"This seems to be running off the rails a little!\",\n  },\n  CONVERSATION_SETTINGS: {\n    errorThreshold: 1, // if the errorThreshold is set to 2, the offer to escalate will occur on the 3rd consecutive error\n    LONG_MESSAGE_LIMIT: 20, // number of words in an unmatched phrase will trigger the alternative \"LONG_MESSAGE_RESPONSE\" message\n    KNOWLEDGE_BASE_ENABLED: true, // for template using the KAI / KB integration; this can be set to false to disable the KB and use a simple fallback response\n    init_interaction: \"init\", // this is the name of the FIRST interaction within your 'INIT' dialog\n    firstInteraction: \"start\", // this is the name of the preffered starting point in your bot. In the case that the first user message is unmatched, the user will be directed to this interaction\n    testMode: false, // for testing purposes\n  },\n  CONTEXT_SESSION_STORE: {\n    // This is for degbugging purposes.\n    // If a namespace is defined below, any prop/values defined below will be set in the Conversational Context Service using the defined namespace name.\n    // set the namespace to 'null' if this is not required\n    namespace: null,\n    currentSkill: botContext.getLPEngagementAttribute(\"currentSkillId\"),\n    previousSkill: botContext.getLPEngagementAttribute(\"previousSkillId\"),\n    campaignId: botContext.getLPEngagementAttribute(\"campaignId\"),\n    engagementId: botContext.getLPEngagementAttribute(\"engagementId\"),\n    customerInfo: botContext.getLPCustomerInfo(),\n    personalInfo: JSON.stringify(botContext.getLPUserPersonalInfo()),\n    channel: botContext.getUserChannel(),\n    customerId: cb.returnCustomerInfo(botContext.getLPCustomerInfo()),\n  },\n  API_SETTINGS: {\n    asyncMessagingEnt: region + \".msg.liveperson.net\",\n    msgHist: region + \".msghist.liveperson.net\",\n    smt: region + \".msg.liveperson.net\",\n    leDataReporting: region + \".data.liveperson.net\",\n    askMaven: regionCode + \".askmaven.liveperson.net\",\n    agentTransfer: region + \".bc-bot.liveperson.net\",\n    acr: regionCode + \".acr.liveperson.net\",\n    MSGINT_AUTOCLOSE: true,\n    MSGINT_HOURS_SINCE_AUTOCLOSE: 24,\n    MSGINT_ROUTE_PREVIOUS_AGENT: false,\n  },\n  CONVERSATION_ATTRIBUTES: {\n    lpAttributes: [\"currentSkillId\", \"previousSkillId\", \"campaignId\", \"rtSessionId\", \"sharkSessionId\", \"sharkVisitorId\", \"BearerToken\", \"chatSessionKey\", \"agentSessionId\", \"engagementId\"],\n    accountId: botContext.getLPAccountId(),\n    conversationId: botContext.getConversationId(),\n    userId: botContext.getUserPlatformId(),\n    consumerParticipantId: botContext.getUserPlatformId(),\n    channel: botContext.getUserChannel(),\n    customerId: cb.returnCustomerInfo(botContext.getLPCustomerInfo()),\n    customerInfo: botContext.getLPCustomerInfo(),\n    personalInfo: JSON.stringify(botContext.getLPUserPersonalInfo()),\n  }\n};\n\nfunction __initConversation() {\n  // converts settings object to botContext variables\n  var s = {};\n  for (var a in Object.keys(SETTINGS)) {\n    var k = Object.keys(SETTINGS)[a]; var v = SETTINGS[Object.keys(SETTINGS)[a]];\n    if (!Array.isArray(v) && \"object\" === typeof v) {\n      for (var b in Object.keys(v)) {\n        var k1 = Object.keys(v)[b]; var v1 = v[k1]; s[k1] = v1; cb.setVar(k1, v1);\n        var n = SETTINGS.CONTEXT_SESSION_STORE.namespace;\n        if (\"CONTEXT_SESSION_STORE\" === k && n) { cb.setContextConv(n, k, v); }\n        if (\"CONVERSATION_ATTRIBUTES\" === k) { var atrs = SETTINGS[k].lpAttributes; for (var _i in atrs) { cb.setVar(atrs[_i], botContext.getLPEngagementAttribute(atrs[_i])); }\n        }\n      }\n    }\n  }\n}\n",
+    "creationTime": "2022-06-19 19:23:49",
+    "modificationTime": "2022-06-23 21:07:50"
+  },
+  "platforms": [
+    {
+      "id": "6725422734036ab63c9beac38a4ecb7f00afc479",
+      "chatbotId": "9745d911-92fa-49bf-9f13-49e6d8527231",
+      "integrationType": "HTMLCLIENT",
+      "platform": "HTMLCLIENT",
+      "status": "NEW"
+    }
+  ],
+  "associatedDomains": [
+    {
+      "id": "9584850a-0f72-463f-9d0c-409c21dc4f46",
+      "name": "DEMO_BUILDER",
+      "chatBotPlatformUserId": "5303f94b92074a89b13b8c1c050d8e1a",
+      "organizationId": "dc19d7b6-f114-4b3a-9852-84dfd063357a",
+      "status": "ACTIVE",
+      "creationTime": "2022-04-11 23:50:49",
+      "modificationTime": "2022-04-11 23:50:49",
+      "modifiedBy": "5303f94b92074a89b13b8c1c050d8e1a",
+      "enableKeyPhraseMatch": false,
+      "keyPhraseMatchThreshold": 0,
+      "type": "LivePersonV2",
+      "nluShareDataAgree": true,
+      "acceptMaskedMessages": false,
+      "language": "en-US",
+      "domainOrigin": "USER",
+      "primary": false,
+      "intentAnalyzerEnabled": false,
+      "hasLiveIntents": false
+    }
+  ],
+  "associatedIntents": [
+    {
+      "id": "5ebc4f3f-3908-4a75-8f3e-4df0dc5792d3",
+      "name": "purchase product",
+      "displayName": "purchase product",
+      "domainId": "9584850a-0f72-463f-9d0c-409c21dc4f46",
+      "domain": "DEMO_BUILDER",
+      "modifiedBy": "5303f94b92074a89b13b8c1c050d8e1a",
+      "type": "INTENT",
+      "isLiveIntent": false,
+      "intentOrigin": "USER"
+    }
+  ],
+  "dialogTemplates": []
+}
